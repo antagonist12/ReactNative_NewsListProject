@@ -24,14 +24,14 @@ const Navigation = () => {
           },
           headerRight: () => (
             <Button
-              onPress={() => alert("This is a button!")}
+              onPress={() => alert("Nada I Love You")}
               title="Info"
               color="#000"
             />
           ),
         }}
       />
-      <Stack.Screen name="NewsDetail" component={DetailNewsScreen} />
+      <Stack.Screen name="Detail News" component={DetailNewsScreen} />
     </Stack.Navigator>
   );
 };

@@ -12,9 +12,10 @@ import {
 import axios from "axios";
 import moment from "moment";
 
+//! global variabel
 let isScrolling = true;
 class News extends Component {
-  //! Use State pada class component
+  //! Use State class component
   constructor(props) {
     super(props);
     this.state = {
@@ -27,7 +28,7 @@ class News extends Component {
   }
 
   sendGetRequest = async () => {
-    const url = `https://newsapi.org/v2/top-headlines?country=${this.state.value}&page=${this.state.pageCurrent}&category=business&pageSize=5&apiKey=ea33d968f47a4cc0bd636c342873214f`;
+    const url = `https://newsapi.org/v2/top-headlines?country=${this.state.value}&page=${this.state.pageCurrent}&category=business&pageSize=5&apiKey=0aba00c6361044ef873751693c260c24`;
     try {
       const resp = await axios.get(url);
 
@@ -37,7 +38,7 @@ class News extends Component {
         data["articles"] = [...this.state.request.articles, ...data.articles];
       }
 
-      this.setState({ request: resp.data });
+      this.setState({ request: data, isLoading: false });
     } catch (err) {
       console.error(err);
     }
@@ -45,85 +46,84 @@ class News extends Component {
 
   // Component first render
   componentDidMount() {
-    this.sendGetRequest();
+    this.setState({ isLoading: true }, this.sendGetRequest);
   }
 
   // component update rendered
   componentDidUpdate(prevState, prevProps) {
-    console.log(this.state.value);
-    // if (prevState != this.state) {
-    // this.handleLoadMore();
-    // }
-    // this.sendGetRequest();
+    if (
+      JSON.stringify(prevProps.pageCurrent) !=
+        JSON.stringify(this.state.pageCurrent) ||
+      JSON.stringify(prevProps.value) != JSON.stringify(this.state.value)
+    ) {
+      // console.log(prevProps.value);
+      // console.log(this.state.value);
+      this.sendGetRequest();
+    }
   }
 
   renderItem = ({ item, index }) => {
     if (index === 0) {
       return (
-        <TouchableOpacity
-          onPress={() => this.props.navigation.navigate("NewsDetail", item)}
-        >
-          <View key={index} style={styles.itemWrapperTop}>
-            <Image style={styles.images} source={{ uri: item.urlToImage }} />
-            <Text style={{ color: "gray" }}>{item.source.name}</Text>
-            <Text
-              style={{ fontWeight: "bold", fontSize: 19, marginVertical: 5 }}
-            >
-              {item.title}
-            </Text>
-            <Text numberOfLines={1} style={{ color: "gray" }}>
-              {item.description}
-            </Text>
-          </View>
-        </TouchableOpacity>
+        <View key={index} style={styles.itemWrapperTop}>
+          <Image style={styles.images} source={{ uri: item.urlToImage }} />
+          <Text style={{ color: "gray" }}>{item.source.name}</Text>
+          <Text style={{ fontWeight: "bold", fontSize: 19, marginVertical: 5 }}>
+            {item.title}
+          </Text>
+          <Text numberOfLines={2} style={{ color: "gray" }}>
+            {item.description}
+          </Text>
+          <TouchableOpacity
+            onPress={() => this.props.navigation.navigate("Detail News", item)}
+          >
+            <Text style={styles.readMore}>Read More</Text>
+          </TouchableOpacity>
+        </View>
       );
     } else {
       return (
-        <TouchableOpacity
-          onPress={() => this.props.navigation.navigate("NewsDetail", item)}
-        >
-          <View key={index} style={styles.itemWrapperBottom}>
-            <Image
-              style={styles.imageBottom}
-              source={{ uri: item.urlToImage }}
-            />
-            <View style={styles.contentWrapper}>
-              <Text style={{ color: "gray", marginBottom: 5 }}>
-                {item.source.name}
-              </Text>
-              <Text
-                style={{ fontWeight: "bold", fontSize: 14, marginBottom: 5 }}
-              >
-                {item.title}
-              </Text>
-              <Text>{moment(item.publishedAt).format("LL")}</Text>
-            </View>
+        <View key={index} style={styles.itemWrapperBottom}>
+          <Image style={styles.imageBottom} source={{ uri: item.urlToImage }} />
+          <View style={styles.contentWrapper}>
+            <Text style={{ color: "gray", marginBottom: 5 }}>
+              {item.source.name}
+            </Text>
+            <Text style={{ fontWeight: "bold", fontSize: 14, marginBottom: 5 }}>
+              {item.title}
+            </Text>
+            <Text>{moment(item.publishedAt).format("LL")}</Text>
+            <TouchableOpacity
+              onPress={() =>
+                this.props.navigation.navigate("Detail News", item)
+              }
+            >
+              <Text style={styles.readMore}>Read More</Text>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       );
     }
   };
 
   renderFooter = () => {
-    return (
+    return this.state.isLoading ? (
       <View style={styles.loader}>
         <ActivityIndicator size={"large"} />
       </View>
-    );
+    ) : null;
   };
 
   renderEmpty = () => {
-    return (
+    return this.state.request.totalResults == 0 ? (
       <Text style={{ padding: 10, fontSize: 18, textAlign: "center" }}>
         No Data
       </Text>
-    );
+    ) : null;
   };
 
   handleLoadMore = async () => {
-    this.setState({ isLoading: true, pageCurrent: this.state.pageCurrent + 1 });
-    this.setState({ isLoading: false });
-    console.log(this.state.pageCurrent);
+    this.setState({ pageCurrent: this.state.pageCurrent + 1, isLoading: true });
   };
 
   render() {
@@ -143,7 +143,9 @@ class News extends Component {
                   ? styles.btnSelected
                   : styles.notSelected
               }
-              onPress={() => this.setState({ btnSelected: 1, value: "us" })}
+              onPress={() =>
+                this.setState({ btnSelected: 1, value: "us", pageCurrent: 1 })
+              }
             >
               <Text style={styles.textBtnSelected}>United State</Text>
             </TouchableOpacity>
@@ -154,7 +156,9 @@ class News extends Component {
                   ? styles.btnSelected
                   : styles.notSelected
               }
-              onPress={() => this.setState({ btnSelected: 2, value: "uk" })}
+              onPress={() =>
+                this.setState({ btnSelected: 2, value: "uk", pageCurrent: 1 })
+              }
             >
               <Text style={styles.textBtnSelected}>United Kingdom</Text>
             </TouchableOpacity>
@@ -165,7 +169,9 @@ class News extends Component {
                   ? styles.btnSelected
                   : styles.notSelected
               }
-              onPress={() => this.setState({ btnSelected: 3, value: "au" })}
+              onPress={() =>
+                this.setState({ btnSelected: 3, value: "au", pageCurrent: 1 })
+              }
             >
               <Text style={styles.textBtnSelected}>Australia</Text>
             </TouchableOpacity>
@@ -176,7 +182,9 @@ class News extends Component {
                   ? styles.btnSelected
                   : styles.notSelected
               }
-              onPress={() => this.setState({ btnSelected: 4, value: "sg" })}
+              onPress={() =>
+                this.setState({ btnSelected: 4, value: "sg", pageCurrent: 1 })
+              }
             >
               <Text style={styles.textBtnSelected}>Singapore</Text>
             </TouchableOpacity>
@@ -189,7 +197,7 @@ class News extends Component {
           renderItem={this.renderItem}
           ListFooterComponent={this.renderFooter}
           ListEmptyComponent={this.renderEmpty}
-          // onEndReachedThreshold={0.1}
+          // onEndReachedThreshold={0}
           onMomentumScrollEnd={() => {
             isScrolling = true;
           }}
@@ -254,6 +262,10 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     alignItems: "center",
     height: 100,
+  },
+  readMore: {
+    marginVertical: 15,
+    color: "blue",
   },
 });
 
